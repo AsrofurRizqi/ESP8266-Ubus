@@ -38,11 +38,11 @@ config login
 - Change default user on code with created user.
 - Change openwrt ip on code.
 - Change default wifi SSID and password on code.
-
+- Time Based on NTP Client
 #### Test
 
 #### References
-[Adafruit SSD1306](https://github.com/adafruit/Adafruit_SSD1306)
-[ArduinoJson](https://github.com/bblanchon/ArduinoJson)
-[NTPClient](https://github.com/arduino-libraries/NTPClient)
-[Time](https://github.com/PaulStoffregen/Time)
+- [Adafruit SSD1306](https://github.com/adafruit/Adafruit_SSD1306)
+- [ArduinoJson](https://github.com/bblanchon/ArduinoJson)
+- [NTPClient](https://github.com/arduino-libraries/NTPClient)
+- [Time](https://github.com/PaulStoffregen/Time)
