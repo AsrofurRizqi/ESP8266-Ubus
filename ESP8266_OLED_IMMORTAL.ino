@@ -26,7 +26,7 @@ const char *server = "http://192.168.1.1/ubus"; //your openwrt ip
 const char *reqtoken = "{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"method\":\"call\",\"params\":\[\"00000000000000000000000000000000\",\"session\",\"login\",{\"username\": \"kuro\",\"password\": \"kuro\"}\]}"; //change ubus user and password(kuro/kuro) with your ubus user
 String reqcpuinfo = "{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"method\":\"call\",\"params\":\[\"token\",\"luci\",\"getCPUInfo\",{}\]}";
 String reqsysinfo = "{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"method\":\"call\",\"params\":\[\"token\",\"system\",\"info\",{}\]}";
-String reqifaceinfo = "{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"method\":\"call\",\"params\":\[\"token\",\"network.device\",\"status\",{}\]}";
+String reqifaceinfo = "{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"method\":\"call\",\"params\":\[\"token\",\"network.device\",\"status\",{\"name\":\"br-lan\"}\]}";
 String reqcpuusage = "{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"method\":\"call\",\"params\":\[\"token\",\"luci\",\"getCPUUsage\",{}\]}";
 
 WiFiUDP ntpUDP;
@@ -164,7 +164,7 @@ void getIfaceData(){
     if(root1["error"]["code"] == -32002){
       getToken();
     }else{
-      JsonObject& data = root1["result"][1]["br-lan"]["statistics"];
+      JsonObject& data = root1["result"][1]["statistics"];
       long long data1 = data["tx_bytes"];
       long long data2 = data["rx_bytes"];
       lasttx = data1 - tx;
