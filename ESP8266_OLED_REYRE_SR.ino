@@ -1,5 +1,5 @@
 //coded by AsrofurRizqi
-//testngoding1.0
+//reyre sr
 
 #include <Adafruit_SSD1306.h>
 #include <ESP8266WiFi.h>
@@ -17,6 +17,7 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 String token = "";
+String cputemp,usage;
 int load1,load2,load3;
 long long tx = 0,rx =0;
 long long lasttx,lastrx;
@@ -27,7 +28,6 @@ const char *reqtoken = "{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"method\":\"call\",\"
 String reqcpuinfo = "{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"method\":\"call\",\"params\":\[\"token\",\"luci\",\"getCPUInfo\",{}\]}";
 String reqsysinfo = "{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"method\":\"call\",\"params\":\[\"token\",\"system\",\"info\",{}\]}";
 String reqifaceinfo = "{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"method\":\"call\",\"params\":\[\"token\",\"network.device\",\"status\",{\"name\":\"br-lan\"}\]}";
-String reqcpuusage = "{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"method\":\"call\",\"params\":\[\"token\",\"luci\",\"getCPUUsage\",{}\]}";
 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
@@ -59,15 +59,12 @@ void getToken(){
   reqcpuinfo.replace("token",token);
   reqsysinfo.replace("token",token);
   reqifaceinfo.replace("token",token);
-  reqcpuusage.replace("token",token);
   jsonBuffer.clear();
   return;
 }
-
-String getCPUTemp(){
+void getCPUTemp(){
   DynamicJsonBuffer jsonBuffer1;
   String payload = "{}";
-  String temp = "";
   http.begin(client, server);
   http.addHeader("Content-Type", "application/json");
   int httpRes = http.POST(reqcpuinfo);
@@ -79,9 +76,12 @@ String getCPUTemp(){
     if(root1["error"]["code"] == -32002){
       getToken();
     }else{
-      String info = root1["result"][1]["cpuinfo"];
+      String info = root1["result"][1]["cpufreq"];
+      String info2 = root1["result"][1]["cpufree"];
       int indexdata = info.indexOf("°C") - 4;
-      temp = info.substring(indexdata,indexdata+4);
+      cputemp = info.substring(indexdata,indexdata+4);
+      usage = info2;
+      usage.replace("\n","");
     }
   }
   else {
@@ -91,35 +91,7 @@ String getCPUTemp(){
   // Free resources
   jsonBuffer1.clear();
   http.end();
-  return temp;
-}
-String getCPUUsage(){
-  DynamicJsonBuffer jsonBuffer4;
-  String payload = "{}";
-  String info;
-  http.begin(client, server);
-  http.addHeader("Content-Type", "application/json");
-  int httpRes = http.POST(reqcpuusage);
-  if (httpRes == 200) {
-    Serial.print("Response1: ");
-    Serial.println(httpRes);
-    payload = http.getString();
-    JsonObject& root1 = jsonBuffer4.parseObject(payload);
-    if(root1["error"]["code"] == -32002){
-      getToken();
-    }else{
-      String data = root1["result"][1]["cpuusage"];
-      info = data;     
-    }
-  }
-  else {
-    Serial.print("Error code: ");
-    Serial.println(httpRes);
-  }
-  // Free resources
-  jsonBuffer4.clear();
-  http.end();
-  return info;
+  return;
 }
 void getSYSInfo(){
   DynamicJsonBuffer jsonBuffer2;
@@ -183,8 +155,7 @@ void getIfaceData(){
   http.end();
   return;
 }
-String FormatBytes(double bytes)
-{
+String FormatBytes(double bytes) {
   double datas = bytes;
   String orders[] = { "B", "KB", "MB", "GB", "TB" };
   int order = 0;
@@ -222,7 +193,8 @@ void loop() {
     if(!timeClient.update()){
       timeClient.forceUpdate();
     }
-    String temp = "CPU: " + getCPUTemp() +"C | "+getCPUUsage();
+    getCPUTemp();
+    String temp = "CPU: " + cputemp +"C | " + usage;
     Serial.println(temp);
     getSYSInfo();
     double load4 = load1 / 65536.0;
