@@ -23,7 +23,7 @@ long long lasttx,lastrx;
 const int button = 16;
 int state = 0;
 const char *ssid     = "KURO_2G"; //change wifi ssid
-const char *password = "Rizqi5701"; //change wifi password
+const char *password = "WifiPewds"; //change wifi password
 const char *server = "http://192.168.1.1/ubus"; //your openwrt ip
 const char *reqtoken = "{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"method\":\"call\",\"params\":\[\"00000000000000000000000000000000\",\"session\",\"login\",{\"username\": \"kuro\",\"password\": \"kuro\"}\]}"; //change ubus user and password(kuro/kuro) with your ubus user
 String reqcpuinfo = "{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"method\":\"call\",\"params\":\[\"token\",\"luci\",\"getCPUInfo\",{}\]}";

@@ -222,13 +222,18 @@ void loop() {
     if(!timeClient.update()){
       timeClient.forceUpdate();
     }
+	//cpu temp and status
     getCPUTemp();
     String temp = "CPU: " + cputemp +"C | " + usage;
     Serial.println(temp);
+	
+	//system info
     getSYSInfo();
     double load4 = load1 / 65536.0;
     double load5 = load2 / 65536.0;
     double load6 = load3 / 65536.0;
+	
+	//interface data
     getIfaceData();
     String pemakaian = "LAN:"+ FormatBytes(tx+rx) + "|" + FormatBytes(lasttx)+"s";
     unsigned long rawTime = timeClient.getEpochTime() + 25200;
