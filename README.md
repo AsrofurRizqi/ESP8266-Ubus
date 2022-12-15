@@ -11,6 +11,8 @@
 - SCL oled &rarr; D1 pins
 - SDA oled &rarr; D2 pins
 
+- button input &rarr; D0 pins
+
 ##### Create Ubus Read Only User :
 
 - Touch lesssuperuser.json on ```/usr/share/rpcd/acl.d/```
@@ -23,6 +25,9 @@
                                 "*": [ "*" ]
                         },
                         "uci": [ "*" ],
+                        "file": {
+                                "*": [ "*" ]
+                        },
                 },
         }
 }

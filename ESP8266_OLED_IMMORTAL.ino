@@ -20,14 +20,17 @@ String token = "";
 int load1,load2,load3;
 long long tx = 0,rx =0;
 long long lasttx,lastrx;
+const int button = 16;
+int state = 0;
 const char *ssid     = "KURO_2G"; //change wifi ssid
-const char *password = "WifiPewds"; //change wifi password
+const char *password = "Rizqi5701"; //change wifi password
 const char *server = "http://192.168.1.1/ubus"; //your openwrt ip
 const char *reqtoken = "{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"method\":\"call\",\"params\":\[\"00000000000000000000000000000000\",\"session\",\"login\",{\"username\": \"kuro\",\"password\": \"kuro\"}\]}"; //change ubus user and password(kuro/kuro) with your ubus user
 String reqcpuinfo = "{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"method\":\"call\",\"params\":\[\"token\",\"luci\",\"getCPUInfo\",{}\]}";
 String reqsysinfo = "{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"method\":\"call\",\"params\":\[\"token\",\"system\",\"info\",{}\]}";
 String reqifaceinfo = "{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"method\":\"call\",\"params\":\[\"token\",\"network.device\",\"status\",{\"name\":\"br-lan\"}\]}";
 String reqcpuusage = "{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"method\":\"call\",\"params\":\[\"token\",\"luci\",\"getCPUUsage\",{}\]}";
+String filexec = "{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"method\":\"call\",\"params\":\[\"token\",\"file\",\"exec\",{\"command\":\"reboot\",\"params\": []}\]}";
 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
@@ -42,7 +45,7 @@ void getToken(){
   http.addHeader("Content-Type", "application/json");
   int httpRes = http.POST(reqtoken);
   if (httpRes == 200) {
-    Serial.print("Response: ");
+    Serial.print("Response token: ");
     Serial.println(httpRes);
     payload = http.getString();
   }
@@ -60,10 +63,10 @@ void getToken(){
   reqsysinfo.replace("token",token);
   reqifaceinfo.replace("token",token);
   reqcpuusage.replace("token",token);
+  filexec.replace("token",token);
   jsonBuffer.clear();
   return;
 }
-
 String getCPUTemp(){
   DynamicJsonBuffer jsonBuffer1;
   String payload = "{}";
@@ -101,7 +104,7 @@ String getCPUUsage(){
   http.addHeader("Content-Type", "application/json");
   int httpRes = http.POST(reqcpuusage);
   if (httpRes == 200) {
-    Serial.print("Response1: ");
+    Serial.print("Response2: ");
     Serial.println(httpRes);
     payload = http.getString();
     JsonObject& root1 = jsonBuffer4.parseObject(payload);
@@ -128,7 +131,7 @@ void getSYSInfo(){
   http.addHeader("Content-Type", "application/json");
   int httpRes = http.POST(reqsysinfo);
   if (httpRes == 200) {
-    Serial.print("Response2: ");
+    Serial.print("Response3: ");
     Serial.println(httpRes);
     payload = http.getString();
     JsonObject& root1 = jsonBuffer2.parseObject(payload);
@@ -158,7 +161,7 @@ void getIfaceData(){
   http.addHeader("Content-Type", "application/json");
   int httpRes = http.POST(reqifaceinfo);
   if (httpRes == 200) {
-    Serial.print("Response3: ");
+    Serial.print("Response4: ");
     Serial.println(httpRes);
     payload = http.getString();
     JsonObject& root1 = jsonBuffer3.parseObject(payload);
@@ -183,8 +186,31 @@ void getIfaceData(){
   http.end();
   return;
 }
-String FormatBytes(double bytes)
-{
+void buttonCommand(){
+  DynamicJsonBuffer jsonBuffer5;
+  String payload = "{}";
+  http.begin(client, server);
+  http.addHeader("Content-Type", "application/json");
+  int httpRes = http.POST(filexec);
+  if (httpRes == 200) {
+    Serial.print("Response5: ");
+    Serial.println(httpRes);
+    payload = http.getString();
+    JsonObject& root1 = jsonBuffer5.parseObject(payload);
+    if(root1["error"]["code"] == -32002){
+      getToken();
+    }
+  }
+  else {
+    Serial.print("Error code: ");
+    Serial.println(httpRes);
+  }
+  // Free resources
+  jsonBuffer5.clear();
+  http.end();
+  return;
+}
+String FormatBytes(double bytes){
   double datas = bytes;
   String orders[] = { "B", "KB", "MB", "GB", "TB" };
   int order = 0;
@@ -201,6 +227,7 @@ void setup() {
   WiFi.begin(ssid, password);
 
   timeClient.begin();
+  pinMode(button, INPUT);
 
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   display.clearDisplay();
@@ -219,18 +246,31 @@ void setup() {
 
 void loop() {
   if(WiFi.status() == WL_CONNECTED){
+    //time ntp
     if(!timeClient.update()){
       timeClient.forceUpdate();
     }
+    //cpu temp & usage
     String temp = "CPU: " + getCPUTemp() +"C | "+getCPUUsage();
     Serial.println(temp);
+
+    //cpu load
     getSYSInfo();
     double load4 = load1 / 65536.0;
     double load5 = load2 / 65536.0;
     double load6 = load3 / 65536.0;
+
+    //interface bandwitdh        
     getIfaceData();
     String pemakaian = "LAN:"+ FormatBytes(tx+rx) + "|" + FormatBytes(lasttx)+"s";
     unsigned long rawTime = timeClient.getEpochTime() + 25200;
+
+    //button state
+    state = digitalRead(button);
+    if(state == HIGH){
+        Serial.println("Button Pressed");
+        buttonCommand();
+    }
 
     if (rawTime != last_second){
     time_t t = rawTime;
